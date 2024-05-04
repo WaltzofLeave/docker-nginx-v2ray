@@ -26,7 +26,7 @@ CERTIFICATE_DIR="${DATA_DIR}/cert/${SITE_DOMAIN}"
 CERTIFICATE_FILE="${CERTIFICATE_DIR}/certificate.crt"
 CERTIFICATE_KEY_FILE="${CERTIFICATE_DIR}/private.key"
 
-if [ -n "{IPV6_SITE_DOMAIN}" ]; then
+if [ -n "${IPV6_SITE_DOMAIN}" ]; then
     IPV6_CERTIFICATE_DIR="${DATA_DIR}/cert/${IPV6_SITE_DOMAIN}"
     IPV6_CERTIFICATE_FILE="${IPV6_CERTIFICATE_DIR}/certificate.crt"
     IPV6_CERTIFICATE_KEY_FILE="${IPV6_CERTIFICATE_DIR}/private.key"
@@ -128,6 +128,7 @@ start_nginx_with_ipv6() {
     echo "starting nginx at port 80(http)&443(https)"
     mkdir -p /run/nginx
     nginx && echo "nginx started"
+}
 
 main() {
     start_nginx
@@ -140,8 +141,8 @@ main6(){
 }
 
 if [ -z "${IPV6_SITE_DOMAIN}" ]; then
-	main6
-else
 	main
+else
+	main6
 fi
 

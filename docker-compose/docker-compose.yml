@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  nginx-v2ray:
+    image: ipv6_added_docker-nginx-v2ray
+    container_name: docker-nginx-v2ray
+    restart: always
+    volumes:
+      - /root/v2ray/cert:/data/cert
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - SITE_DOMAIN=transformer.freediffusionai.com
+      - IPV6_SITE_DOMAIN=ipv6.transformer.freediffusionai.com
+      - V2RAY_TOKEN=2393f796-21cc-4250-b0ba-43a594cc4375
+      - V2RAY_WS_PATH=/t7ubUgau8kEmPNv5yczM2MrqgZrSug4UPxj53tb487kMatGwEX5YNbRtUgNvxNEXawMwzSbR
+    networks:
+      mynetwork:
+        ipv6_address: 2001:db9::c001
+
+networks:
+  mynetwork:
+    enable_ipv6: true
+    driver: bridge
+    ipam:
+      config:
+        - subnet: "2001:db9::/64"
+
+
