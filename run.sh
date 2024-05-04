@@ -5,6 +5,7 @@ if [ -z "${SITE_DOMAIN}" ]; then
     exit 1
 fi
 
+
 if [ -z "${V2RAY_TOKEN}" ]; then
     echo "env V2RAY_TOKEN not set!"
     exit 1
@@ -24,6 +25,13 @@ DATA_DIR="/data"
 CERTIFICATE_DIR="${DATA_DIR}/cert/${SITE_DOMAIN}"
 CERTIFICATE_FILE="${CERTIFICATE_DIR}/certificate.crt"
 CERTIFICATE_KEY_FILE="${CERTIFICATE_DIR}/private.key"
+
+if [ -n "{IPV6_SITE_DOMAIN}" ]; then
+    IPV6_CERTIFICATE_DIR="${DATA_DIR}/cert/${IPV6_SITE_DOMAIN}"
+    IPV6_CERTIFICATE_FILE="${IPV6_CERTIFICATE_DIR}/certificate.crt"
+    IPV6_CERTIFICATE_KEY_FILE="${IPV6_CERTIFICATE_DIR}/private.key"
+fi
+
 DHPARAM_FILE="${CERTIFICATE_DIR}/dhparam.pem"
 
 V2RAY_PORT=12345
@@ -82,9 +90,58 @@ start_nginx() {
     nginx && echo "nginx started"
 }
 
+start_nginx_with_ipv6() {
+    echo "prepare certificate files for nginx"
+    if [ -e "${CERTIFICATE_KEY_FILE}" ]; then
+        echo "using exist certificate file ${CERTIFICATE_KEY_FILE}"
+    else
+        echo "generating a self-signed certificate (NOT SECURE!!!!!)"
+        mkdir -p "${CERTIFICATE_DIR}"
+        openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+            -out ${CERTIFICATE_FILE} \
+            -keyout ${CERTIFICATE_KEY_FILE} \
+            -subj "/C=US/ST=New York/L=New York/O=Global Security/OU=Global Security/CN=${SITE_DOMAIN}"
+    fi
+
+
+    echo "prepare dhparam file for nginx"
+    if [ -e "${DHPARAM_FILE}" ]; then
+        echo "using exist dhparam file ${DHPARAM_FILE}"
+    else
+        echo "generating 2048 bit dhparam file"
+        openssl dhparam -out ${DHPARAM_FILE} 2048
+    fi
+
+
+    sed \
+        -e "s:\${V2RAY_PORT}:${V2RAY_PORT}:" \
+        -e "s:\${V2RAY_WS_PATH}:${V2RAY_WS_PATH}:" \
+        -e "s:\${SITE_DOMAIN}:${SITE_DOMAIN}:" \
+        -e "s:\${IPV6_SITE_DOMAIN}:${IPV6_SITE_DOMAIN}:" \
+        -e "s:\${CERTIFICATE_FILE}:${CERTIFICATE_FILE}:" \
+        -e "s:\${IPV6_CERTIFICATE_FILE}:${IPV6_CERTIFICATE_FILE}:" \
+        -e "s:\${CERTIFICATE_KEY_FILE}:${CERTIFICATE_KEY_FILE}:" \
+        -e "s:\${IPV6_CERTIFICATE_KEY_FILE}:${IPV6_CERTIFICATE_KEY_FILE}:" \
+        -e "s:\${DHPARAM_FILE}:${DHPARAM_FILE}:" \
+        /conf/nginx/site.conf6.template >${NGINX_CONF}
+
+    echo "starting nginx at port 80(http)&443(https)"
+    mkdir -p /run/nginx
+    nginx && echo "nginx started"
+
 main() {
     start_nginx
     start_v2ray
 }
 
-main
+main6(){
+    start_nginx_with_ipv6
+    start_v2ray
+}
+
+if [ -z "${IPV6_SITE_DOMAIN}" ]; then
+	main6
+else
+	main
+fi
+
