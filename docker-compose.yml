@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  nginx-v2ray:
+    image: PLACEHOLDER/docker-nginx-v2ray
+    container_name: docker-nginx-v2ray
+    restart: always
+    volumes:
+      - /root/v2ray/cert:/data/cert
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - SITE_DOMAIN=A.com
+      - IPV6_SITE_DOMAIN=B.com
+      - V2RAY_TOKEN=C
+      - V2RAY_WS_PATH=D
+
